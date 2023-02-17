@@ -1,0 +1,16 @@
+<% layout('/layouts/boilerplate') -%>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4 text-center">
+            <h1 class="display-4 mb-4">Tire Pressure</h1>
+            <canvas id="myCanvas" class="tireCanvas"></canvas>
+            <div class="mt-4"><p id="psiAdvice" class="small">Hover tire to add air:</p></div>
+            <input type="range" id="psiRange" min="0" max="60" value="0" step="1" class="form-range mt-4">
+            <h2 class="mt-4"><span id="psiValue">0 PSI</span></h2>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+</div>
+<script src="/scripts/tirePressure.js"></script>

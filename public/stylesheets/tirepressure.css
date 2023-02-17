@@ -1,0 +1,47 @@
+.tireCanvas {
+  display: block;
+  margin: auto;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  max-width: 100%;
+  max-height: 100%;
+  animation: spin 2s linear infinite;
+}
+
+#psiRange {
+  visibility: hidden;
+}
+
+@keyframes spin {
+  from {
+      transform: rotate(0deg);
+  }
+  to {
+      transform: rotate(360deg);
+  }
+}
+
+#psiValue {
+  color: lightsteelblue;
+}
+
+#psiAdvice {
+  color: #6C757D;
+}
+
+.form-range::-webkit-slider-thumb {
+  background-color: #0077FF;
+}
+
+.form-range::-moz-range-thumb {
+  background-color: #0077FF;
+}
+
+.form-range::-ms-thumb {
+  background-color: #0077FF;
+}
+
+.hidden {
+  font-size: small;
+  color: #6C757D;
+}
