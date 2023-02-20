@@ -1,15 +1,6 @@
-// function updateSpans() {
-//       document.getElementById("selectedBatterySize").textContent = document.getElementById("batterySize").value;
-//       document.getElementById("selectedVehicleEfficiency").textContent = document.getElementById("vehicleEfficiency").value;
-//       document.getElementById("selectedPsiValue").textContent = document.getElementById("psiRange").value;
-//       document.getElementById("selectedVehicleWeight").textContent = document.getElementById("vehicleWeight").value;
-//       document.getElementById("selectedEcoAbility").textContent = document.getElementById("ecoAbility").value;
-//       document.getElementById("selectedRegen").textContent = document.getElementById("regen").value;
-//     }
-    
+//This function is called when adjusting inputs to keep a live updated range result
 
-
-    function updateRange() {
+function updateRange() {
 
       let vehicleEfficiency = Number(document.getElementById("vehicleEfficiency").value);
       let batterySize = Number(document.getElementById("batterySize").value);
@@ -25,6 +16,8 @@
       document.getElementById("range").innerHTML = "Estimated range: " + expectedRange.toFixed(1) + " miles";
     }
     
+//Array of all inputIds used for checking each input Id in order to adjust the span inner text, displaying each value live-time.
+
 const inputIds = ['stateOfCharge', 'batterySize', 'vehicleEfficiency', 'psiRange', 'vehicleWeight', 'ecoAbility', 'regen'];
 
 inputIds.forEach(function(inputId) {
@@ -35,13 +28,7 @@ inputIds.forEach(function(inputId) {
     spanElem.textContent = inputElem.value;
     updateRange();
   });
-
-  // Set the initial value of the span element to match the input element
 });
-
-
-
-
 
 // tirePressure Module Script:
 
@@ -51,6 +38,7 @@ canvas.width = 100;
 canvas.height = 100;
 let context = canvas.getContext("2d");
 
+// Set drawTire function protocall
 let centerX = canvas.width / 2;
 let centerY = canvas.height / 2;
 let minRadius = 0.45 * tireDiameter / 2;
@@ -107,18 +95,18 @@ let rimRadius = 0.3 * tireDiameter / 2;
 
 // Change text below inflating tire during animation to help guide evCalc user
 
-        function updateTireSize(psi) {
+        function updateTireData(psi) {
             let color;
             let psiAdviceText;
             
             if (psi >= 0 && psi < 10) {
               color = [0, 0, 0];
-              psiAdviceText = "Hover tire to add air.";
-            } else if (psi >= 10 && psi < 25) {
+              psiAdviceText = "Click to begin adding air.";
+            } else if (psi >= 10 && psi < 30) {
               let percent = (psi - 10) / 15;
               color = [Math.floor(0 + percent * (0 - 0)), Math.floor(255 * percent), Math.floor(0 + percent * (255 - 0))];
               psiAdviceText = "Great! This will improve efficiency.";
-            } else if (psi >= 25 && psi < 45) {
+            } else if (psi >= 30 && psi < 45) {
               color = [0, 255, 0];
               psiAdviceText = "Check with manufacturer for best tire pressure.";
             } else if (psi >= 45 && psi < 60) {
@@ -143,89 +131,93 @@ let rimRadius = 0.3 * tireDiameter / 2;
             psiAdvice.textContent = psiAdviceText;
           }  
 
-// Animate tire, deflate tire @ 60 psi
+// Animate tire inflation, and animate deflating tire @ 60 psi
 
         let psiRange = document.getElementById("psiRange");
         let intervalId = null;
+        
+        // set boolean flag so that we can start/stop the annimation based on the value
+        let isTireInflating = false;
 
-        canvas.addEventListener("mouseenter", function () {
-            intervalId = setInterval(function () {
-                let psi = parseInt(psiRange.value) + 1;
-                if (psi <= 60) {
-                    psiRange.value = psi;
-                    psiValue.textContent = psi + " PSI";
-                    updateTireSize(psi);
-                    if (psi > 40) {
-                        clearInterval(intervalId);
-                        intervalId = setInterval(function () {
-                            let psi = parseInt(psiRange.value) + 1;
-                            if (psi <= 60) {
+        canvas.addEventListener("click", function () {
+            if (isTireInflating){
+                clearInterval(intervalId);
+                isTireInflating = false;
+            } else {
+                intervalId = setInterval(function () {
+                    let psi = parseInt(psiRange.value) + 1;
+                    if (psi <= 60) {
+                        psiRange.value = psi;
+                        psiValue.textContent = psi + " PSI";
+                        updateTireData(psi);
+                        if (psi > 40) {
+                            clearInterval(intervalId);
+                            intervalId = setInterval(function () {
+                                let psi = parseInt(psiRange.value) + 1;
+                                if (psi <= 60) {
+                                    psiRange.value = psi;
+                                    psiValue.textContent = psi + " PSI";
+                                    updateTireData(psi);
+                                } else {
+                                    // tire pop animation
+                                    let duration = 1500; // 2000ms = 2s
+                                    let startTime = new Date().getTime();
+                                    let startPsi = psi;
+                                    let endPsi = 0;
+                                    let animationIntervalId = setInterval(function () {
+                                        let now = new Date().getTime();
+                                        let elapsed = now - startTime;
+                                        if (elapsed < duration) {
+                                            // interpolate psi between start and end values
+                                            let psi = Math.round(startPsi - (startPsi - endPsi) * elapsed / duration);
+                                            psiRange.value = psi;
+                                            psiValue.textContent = psi + " PSI";
+                                            updateTireData(psi);
+                                        } else {
+                                            // end of animation, reset to 20 psi
+                                            clearInterval(animationIntervalId);
+                                            psiRange.value = 20;
+                                            psiValue.textContent = "20 PSI";
+                                            updateTireData(0);
+                                        }
+                                    }, 20); // 20ms = 50fps
+                                }
+                            }, 300); // 2000ms = 2s
+                        }
+                    } else {
+                        // tire pop animation
+                        let duration = 1000; // 2000ms = 2s
+                        let startTime = new Date().getTime();
+                        let startPsi = psi;
+                        let endPsi = 0;
+                        let animationIntervalId = setInterval(function () {
+                            let now = new Date().getTime();
+                            let elapsed = now - startTime;
+                            if (elapsed < duration) {
+                                // interpolate psi between start and end values
+                                let psi = Math.round(startPsi - (startPsi - endPsi) * elapsed / duration);
                                 psiRange.value = psi;
                                 psiValue.textContent = psi + " PSI";
-                                updateTireSize(psi);
+                                updateTireData(psi);
                             } else {
-                                // tire pop animation
-                                let duration = 1000; // 2000ms = 2s
-                                let startTime = new Date().getTime();
-                                let endTime = startTime + duration;
-                                let startPsi = psi;
-                                let endPsi = 0;
-                                let animationIntervalId = setInterval(function () {
-                                    let now = new Date().getTime();
-                                    let elapsed = now - startTime;
-                                    if (elapsed < duration) {
-                                        // interpolate psi between start and end values
-                                        let psi = Math.round(startPsi - (startPsi - endPsi) * elapsed / duration);
-                                        psiRange.value = psi;
-                                        psiValue.textContent = psi + " PSI";
-                                        updateTireSize(psi);
-                                    } else {
-                                        // end of animation, reset to 20 psi
-                                        clearInterval(animationIntervalId);
-                                        psiRange.value = 20;
-                                        psiValue.textContent = "20 PSI";
-                                        updateTireSize(0);
-                                    }
-                                }, 20); // 20ms = 50fps
+                                // end of animation, reset to 0 psi
+                                clearInterval(animationIntervalId);
+                                psiRange.value = 20;
+                                psiValue.textContent = "20 PSI";
+                                updateTireData(0);
                             }
-                        }, 200); // 2000ms = 2s
+                        }, 20); // 20ms = 50fps
                     }
-                } else {
-                    // tire pop animation
-                    let duration = 1000; // 2000ms = 2s
-                    let startTime = new Date().getTime();
-                    let endTime = startTime + duration;
-                    let startPsi = psi;
-                    let endPsi = 0;
-                    let animationIntervalId = setInterval(function () {
-                        let now = new Date().getTime();
-                        let elapsed = now - startTime;
-                        if (elapsed < duration) {
-                            // interpolate psi between start and end values
-                            let psi = Math.round(startPsi - (startPsi - endPsi) * elapsed / duration);
-                            psiRange.value = psi;
-                            psiValue.textContent = psi + " PSI";
-                            updateTireSize(psi);
-                        } else {
-                            // end of animation, reset to 0 psi
-                            clearInterval(animationIntervalId);
-                            psiRange.value = 20;
-                            psiValue.textContent = "20 PSI";
-                            updateTireSize(0);
-                        }
-                    }, 20); // 20ms = 50fps
-                }
-            }, 100);
+                }, 200);
+                isTireInflating = true;
+            }
+            
         });
         
-        canvas.addEventListener("mouseleave", function () {
-            clearInterval(intervalId);
-        });
-
         psiRange.addEventListener("input", function () {
             let psi = psiRange.value;
             psiValue.textContent = psi + " PSI";
-            updateTireSize(psi);
+            updateTireData(psi);
         });
 
-        updateTireSize(0);
+        updateTireData(0);
